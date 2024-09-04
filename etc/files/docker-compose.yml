@@ -1,0 +1,255 @@
+services:
+  # --------------------------------------------------------------------------------------------------------------------
+  # Core Services
+  # --------------------------------------------------------------------------------------------------------------------
+  service-order:
+    container_name: "${SERVICE_ORDER_CONTAINER_NAME}"
+    image: "${CONTAINER_IMAGE_USERNAME}/${SERVICE_ORDER_CONTAINER_NAME}:${SERVICE_ORDER_IMAGE_VERSION}"
+    ports:
+      - "${SERVICE_ORDER_PORT}:${SERVICE_ORDER_PORT}"
+    env_file:
+      - "${LOCAL_ENV_PATH}"
+    volumes:
+      - "${LOCAL_LOG_PATH}${SERVICE_ORDER_CONTAINER_NAME}${LOG_EXTENSION}:${CONTAINER_LOG_PATH}${SERVICE_ORDER_CONTAINER_NAME}${LOG_EXTENSION}"
+    networks:
+      - app-network
+    depends_on:
+      - "${POSTGRES_MASTER_CONTAINER_NAME}"
+      - "${POSTGRES_REPLICA_1_CONTAINER_NAME}"
+      - "${POSTGRES_REPLICA_2_CONTAINER_NAME}"
+      - "${POSTGRES_REPLICA_3_CONTAINER_NAME}"
+      - "${REDIS_CONTAINER_NAME}"
+
+  service-product:
+    container_name: "${SERVICE_PRODUCT_CONTAINER_NAME}"
+    image: "${CONTAINER_IMAGE_USERNAME}/${SERVICE_PRODUCT_CONTAINER_NAME}:${SERVICE_PRODUCT_IMAGE_VERSION}"
+    ports:
+      - "${SERVICE_PRODUCT_PORT}:${SERVICE_PRODUCT_PORT}"
+    env_file:
+      - "${LOCAL_ENV_PATH}"
+    volumes:
+      - "${LOCAL_LOG_PATH}${SERVICE_PRODUCT_CONTAINER_NAME}${LOG_EXTENSION}:${CONTAINER_LOG_PATH}${SERVICE_PRODUCT_CONTAINER_NAME}${LOG_EXTENSION}"
+    networks:
+      - app-network
+    depends_on:
+      - "${POSTGRES_MASTER_CONTAINER_NAME}"
+      - "${POSTGRES_REPLICA_1_CONTAINER_NAME}"
+      - "${POSTGRES_REPLICA_2_CONTAINER_NAME}"
+      - "${POSTGRES_REPLICA_3_CONTAINER_NAME}"
+      - "${REDIS_CONTAINER_NAME}"
+
+  service-shop:
+    container_name: "${SERVICE_SHOP_CONTAINER_NAME}"
+    image: "${CONTAINER_IMAGE_USERNAME}/${SERVICE_SHOP_CONTAINER_NAME}:${SERVICE_SHOP_IMAGE_VERSION}"
+    ports:
+      - "${SERVICE_SHOP_PORT}:${SERVICE_SHOP_PORT}"
+    env_file:
+      - "${LOCAL_ENV_PATH}"
+    volumes:
+      - "${LOCAL_LOG_PATH}${SERVICE_SHOP_CONTAINER_NAME}${LOG_EXTENSION}:${CONTAINER_LOG_PATH}${SERVICE_SHOP_CONTAINER_NAME}${LOG_EXTENSION}"
+    networks:
+      - app-network
+    depends_on:
+      - "${POSTGRES_MASTER_CONTAINER_NAME}"
+      - "${POSTGRES_REPLICA_1_CONTAINER_NAME}"
+      - "${POSTGRES_REPLICA_2_CONTAINER_NAME}"
+      - "${POSTGRES_REPLICA_3_CONTAINER_NAME}"
+      - "${REDIS_CONTAINER_NAME}"
+
+  service-user:
+    container_name: "${SERVICE_USER_CONTAINER_NAME}"
+    image: "${CONTAINER_IMAGE_USERNAME}/${SERVICE_USER_CONTAINER_NAME}:${SERVICE_USER_IMAGE_VERSION}"
+    ports:
+      - "${SERVICE_USER_PORT}:${SERVICE_USER_PORT}"
+    env_file:
+      - "${LOCAL_ENV_PATH}"
+    volumes:
+      - "${LOCAL_LOG_PATH}${SERVICE_USER_CONTAINER_NAME}${LOG_EXTENSION}:${CONTAINER_LOG_PATH}${SERVICE_USER_CONTAINER_NAME}${LOG_EXTENSION}"
+    networks:
+      - app-network
+    depends_on:
+      - "${POSTGRES_MASTER_CONTAINER_NAME}"
+      - "${POSTGRES_REPLICA_1_CONTAINER_NAME}"
+      - "${POSTGRES_REPLICA_2_CONTAINER_NAME}"
+      - "${POSTGRES_REPLICA_3_CONTAINER_NAME}"
+      - "${REDIS_CONTAINER_NAME}"
+
+  service-warehouse:
+    container_name: "${SERVICE_WAREHOUSE_CONTAINER_NAME}"
+    image: "${CONTAINER_IMAGE_USERNAME}/${SERVICE_WAREHOUSE_CONTAINER_NAME}:${SERVICE_WAREHOUSE_IMAGE_VERSION}"
+    ports:
+      - "${SERVICE_WAREHOUSE_PORT}:${SERVICE_WAREHOUSE_PORT}"
+    env_file:
+      - "${LOCAL_ENV_PATH}"
+    volumes:
+      - "${LOCAL_LOG_PATH}${SERVICE_WAREHOUSE_CONTAINER_NAME}${LOG_EXTENSION}:${CONTAINER_LOG_PATH}${SERVICE_WAREHOUSE_CONTAINER_NAME}${LOG_EXTENSION}"
+    networks:
+      - app-network
+    depends_on:
+      - "${POSTGRES_MASTER_CONTAINER_NAME}"
+      - "${POSTGRES_REPLICA_1_CONTAINER_NAME}"
+      - "${POSTGRES_REPLICA_2_CONTAINER_NAME}"
+      - "${POSTGRES_REPLICA_3_CONTAINER_NAME}"
+      - "${REDIS_CONTAINER_NAME}"
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # Postgres Master
+  # --------------------------------------------------------------------------------------------------------------------
+  postgres-master:
+    container_name: "${POSTGRES_MASTER_CONTAINER_NAME}"
+    image: postgres:14-alpine
+    user: postgres
+    ports:
+      - "${POSTGRES_MASTER_PORT}:${POSTGRES_MASTER_PORT}"
+    volumes:
+      - "${LOCAL_LOG_PATH}${POSTGRES_MASTER_CONTAINER_NAME}${LOG_EXTENSION}:${CONTAINER_LOG_PATH}${POSTGRES_MASTER_CONTAINER_NAME}${LOG_EXTENSION}"
+      - "${LOCAL_SCHEMA_PATH}:${POSTGRES_MASTER_SCHEMA_INIT_PATH}"
+    environment:
+      TZ: "${TZ}"
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_DB: "${POSTGRES_DB}"
+      POSTGRES_HOST_AUTH_METHOD: "scram-sha-256\nhost replication all 0.0.0.0/0 md5"
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    command: [
+      "postgres",
+      "-c", "port=${POSTGRES_MASTER_PORT}",
+      "-c", "wal_level=${POSTGRES_MASTER_WAL_LEVEL}",
+      "-c", "hot_standby=${POSTGRES_MASTER_HOT_STANDBY}",
+      "-c", "max_wal_senders=${POSTGRES_MASTER_MAX_REPLICATION}",
+      "-c", "max_replication_slots=${POSTGRES_MASTER_MAX_REPLICATION}",
+      "-c", "hot_standby_feedback=${POSTGRES_MASTER_HOT_STANDBY_FEEDBACK}",
+      "-c", "logging_collector=${POSTGRES_MASTER_LOGGING_COLLECTOR}",
+      "-c", "log_directory=${CONTAINER_LOG_PATH}",
+      "-c", "log_filename=${POSTGRES_MASTER_CONTAINER_NAME}${LOG_EXTENSION}",
+      "-c", "log_statement=${POSTGRES_MASTER_LOG_STATEMENT}",
+    ]
+    networks:
+      - app-network
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # Postgres Replicas
+  # --------------------------------------------------------------------------------------------------------------------
+  postgres-replica-1:
+    container_name: "${POSTGRES_REPLICA_1_CONTAINER_NAME}"
+    image: postgres:14-alpine
+    user: postgres
+    ports:
+      - "${POSTGRES_REPLICA_1_PORT}:${POSTGRES_REPLICA_1_PORT}"
+    volumes:
+      - "${LOCAL_LOG_PATH}${POSTGRES_REPLICA_1_CONTAINER_NAME}${LOG_EXTENSION}:${CONTAINER_LOG_PATH}${POSTGRES_REPLICA_1_CONTAINER_NAME}${LOG_EXTENSION}"
+      - "${LOCAL_SCRIPT_PATH}${POSTGRES_REPLICA_INIT_SCRIPT_NAME}:${CONTAINER_SCRIPT_PATH}${POSTGRES_REPLICA_INIT_SCRIPT_NAME}"
+    environment:
+      TZ: "${TZ}"
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_DB: "${POSTGRES_DB}"
+      POSTGRES_MASTER_HOST: "${POSTGRES_MASTER_CONTAINER_NAME}"
+      POSTGRES_MASTER_PORT: "${POSTGRES_MASTER_PORT}"
+      SLAVE_NAME: "${POSTGRES_REPLICA_1_CONTAINER_NAME}"
+      PGPASSWORD: "${POSTGRES_PASSWORD}"
+    entrypoint: [ "${CONTAINER_SCRIPT_PATH}${POSTGRES_REPLICA_INIT_SCRIPT_NAME}" ]
+    command: [
+      "postgres",
+      "-c", "port=${POSTGRES_REPLICA_1_PORT}",
+      "-c", "logging_collector=${POSTGRES_REPLICA_LOGGING_COLLECTOR}",
+      "-c", "log_directory=${CONTAINER_LOG_PATH}",
+      "-c", "log_filename=${POSTGRES_REPLICA_1_CONTAINER_NAME}${LOG_EXTENSION}",
+      "-c", "log_statement=${POSTGRES_REPLICA_LOG_STATEMENT}",
+    ]
+    networks:
+      - app-network
+    depends_on:
+      - "${POSTGRES_MASTER_CONTAINER_NAME}"
+
+  postgres-replica-2:
+    container_name: "${POSTGRES_REPLICA_2_CONTAINER_NAME}"
+    image: postgres:14-alpine
+    user: postgres
+    ports:
+      - "${POSTGRES_REPLICA_2_PORT}:${POSTGRES_REPLICA_2_PORT}"
+    volumes:
+      - "${LOCAL_LOG_PATH}${POSTGRES_REPLICA_2_CONTAINER_NAME}${LOG_EXTENSION}:${CONTAINER_LOG_PATH}${POSTGRES_REPLICA_2_CONTAINER_NAME}${LOG_EXTENSION}"
+      - "${LOCAL_SCRIPT_PATH}${POSTGRES_REPLICA_INIT_SCRIPT_NAME}:${CONTAINER_SCRIPT_PATH}${POSTGRES_REPLICA_INIT_SCRIPT_NAME}"
+    environment:
+      TZ: "${TZ}"
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_DB: "${POSTGRES_DB}"
+      POSTGRES_MASTER_HOST: "${POSTGRES_MASTER_CONTAINER_NAME}"
+      POSTGRES_MASTER_PORT: "${POSTGRES_MASTER_PORT}"
+      SLAVE_NAME: "${POSTGRES_REPLICA_2_CONTAINER_NAME}"
+      PGPASSWORD: "${POSTGRES_PASSWORD}"
+    entrypoint: [ "${CONTAINER_SCRIPT_PATH}${POSTGRES_REPLICA_INIT_SCRIPT_NAME}" ]
+    command: [
+      "postgres",
+      "-c", "port=${POSTGRES_REPLICA_2_PORT}",
+      "-c", "logging_collector=${POSTGRES_REPLICA_LOGGING_COLLECTOR}",
+      "-c", "log_directory=${CONTAINER_LOG_PATH}",
+      "-c", "log_filename=${POSTGRES_REPLICA_2_CONTAINER_NAME}${LOG_EXTENSION}",
+      "-c", "log_statement=${POSTGRES_REPLICA_LOG_STATEMENT}",
+    ]
+    networks:
+      - app-network
+    depends_on:
+      - "${POSTGRES_MASTER_CONTAINER_NAME}"
+
+  postgres-replica-3:
+    container_name: "${POSTGRES_REPLICA_3_CONTAINER_NAME}"
+    image: postgres:14-alpine
+    user: postgres
+    ports:
+      - "${POSTGRES_REPLICA_3_PORT}:${POSTGRES_REPLICA_3_PORT}"
+    volumes:
+      - "${LOCAL_LOG_PATH}${POSTGRES_REPLICA_3_CONTAINER_NAME}${LOG_EXTENSION}:${CONTAINER_LOG_PATH}${POSTGRES_REPLICA_3_CONTAINER_NAME}${LOG_EXTENSION}"
+      - "${LOCAL_SCRIPT_PATH}${POSTGRES_REPLICA_INIT_SCRIPT_NAME}:${CONTAINER_SCRIPT_PATH}${POSTGRES_REPLICA_INIT_SCRIPT_NAME}"
+    environment:
+      TZ: "${TZ}"
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_DB: "${POSTGRES_DB}"
+      POSTGRES_MASTER_HOST: "${POSTGRES_MASTER_CONTAINER_NAME}"
+      POSTGRES_MASTER_PORT: "${POSTGRES_MASTER_PORT}"
+      SLAVE_NAME: "${POSTGRES_REPLICA_3_CONTAINER_NAME}"
+      PGPASSWORD: "${POSTGRES_PASSWORD}"
+    entrypoint: [ "${CONTAINER_SCRIPT_PATH}${POSTGRES_REPLICA_INIT_SCRIPT_NAME}" ]
+    command: [
+      "postgres",
+      "-c", "port=${POSTGRES_REPLICA_3_PORT}",
+      "-c", "logging_collector=${POSTGRES_REPLICA_LOGGING_COLLECTOR}",
+      "-c", "log_directory=${CONTAINER_LOG_PATH}",
+      "-c", "log_filename=${POSTGRES_REPLICA_3_CONTAINER_NAME}${LOG_EXTENSION}",
+      "-c", "log_statement=${POSTGRES_REPLICA_LOG_STATEMENT}",
+    ]
+    networks:
+      - app-network
+    depends_on:
+      - "${POSTGRES_MASTER_CONTAINER_NAME}"
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # Redis
+  # --------------------------------------------------------------------------------------------------------------------
+  redis:
+    container_name: "${REDIS_CONTAINER_NAME}"
+    image: redis:alpine
+    ports:
+      - "${REDIS_PORT}:${REDIS_PORT}"
+    volumes:
+      - "${LOCAL_LOG_PATH}${REDIS_CONTAINER_NAME}${LOG_EXTENSION}:${CONTAINER_LOG_PATH}${REDIS_CONTAINER_NAME}${LOG_EXTENSION}"
+    environment:
+      TZ: "${TZ}"
+    command: [
+      "redis-server",
+      "--requirepass", "${REDIS_PASS}",
+      "--port", "${REDIS_PORT}",
+      "--bind", "${REDIS_BIND}",
+      "--logfile", "${CONTAINER_LOG_PATH}${REDIS_CONTAINER_NAME}${LOG_EXTENSION}",
+      "--loglevel", "${REDIS_LOG_LEVEL}",
+      "--appendfsync", "${REDIS_APPEND_FSYNC}",
+    ]
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
