@@ -7,6 +7,7 @@ import (
 	"github.com/bearaujus/go-warehouse-api/internal/pkg"
 	"github.com/bearaujus/go-warehouse-api/internal/pkg/httputil"
 	"github.com/bearaujus/go-warehouse-api/internal/pkg/postgres_cacher"
+	. "github.com/bearaujus/go-warehouse-api/internal/resource/shop/http_client"
 	. "github.com/bearaujus/go-warehouse-api/internal/resource/user/postgres"
 	. "github.com/bearaujus/go-warehouse-api/internal/usecase/user"
 	"github.com/cloudwego/hertz/pkg/app/server"
@@ -14,7 +15,7 @@ import (
 )
 
 func main() {
-	cfg, cancel := pkg.InitBaseApp()
+	ctx, cfg, cancel := pkg.InitBaseApp()
 	defer cancel()
 
 	log.Printf("Starting %v service...", cfg.ServiceUserContainerName)
@@ -40,8 +41,15 @@ func main() {
 	}
 
 	rUserPostgres := NewUserResourcePostgres(postgres)
+	rShopHTTPClient := NewShopResourceHTTPClient(
+		pkg.GenerateHostPort(false, cfg.ServiceShopContainerName, cfg.ServiceShopPort),
+		cfg.ServiceUserHTTPCallTimeout,
+		cfg.ServiceUserContainerName,
+		cfg.ServiceUserHTTPCallAuthKey,
+		cfg.ServiceUserHTTPCallAuthTTL,
+	)
 
-	uUser := NewUserUsecase(rUserPostgres, cfg.ServiceUserAuthSecretKey, cfg.ServiceUserAuthTTL)
+	uUser := NewUserUsecase(rUserPostgres, rShopHTTPClient, cfg.ServiceUserAuthSecretKey, cfg.ServiceUserAuthTTL)
 
 	hUserHTTP := NewUserHandlerHTTP(uUser)
 
@@ -52,7 +60,7 @@ func main() {
 		cfg.ServiceWarehouseContainerName: cfg.ServiceWarehouseHTTPCallAuthKey,
 	})
 
-	err = httputil.StartHTTPServer(cfg.ServiceUserPort, func(s *server.Hertz) {
+	err = httputil.StartHTTPServer(ctx, cfg.ServiceUserPort, func(s *server.Hertz) {
 		hUserHTTP.RegisterRoutes(s, mAuth, tracker.MiddlewareTracker())
 	})
 	if err != nil {

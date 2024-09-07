@@ -5,30 +5,44 @@ import (
 	"github.com/bearaujus/go-warehouse-api/internal/model"
 )
 
-func (u *warehouseUsecaseImpl) GetWarehousesByUser(ctx context.Context, userId uint64) ([]*model.Warehouse, error) {
-	return u.rWarehouse.GetWarehousesByUser(ctx, userId)
+func (u *warehouseUsecaseImpl) GetWarehousesByShopUserId(ctx context.Context, shopUserId uint64) ([]*model.Warehouse, error) {
+	return u.rWarehouse.GetWarehousesByShopUserId(ctx, shopUserId)
 }
 
-func (u *warehouseUsecaseImpl) GetWarehousesByUserAndShop(ctx context.Context, userId, shopId uint64) ([]*model.Warehouse, error) {
-	return u.rWarehouse.GetWarehousesByUserAndShop(ctx, userId, shopId)
+func (u *warehouseUsecaseImpl) GetActiveWarehouseProductStocksByProductId(ctx context.Context, productId uint64) ([]*model.WarehouseProductStock, error) {
+	return u.rWarehouse.GetActiveWarehouseProductStocksByProductId(ctx, productId)
 }
 
-func (u *warehouseUsecaseImpl) CreateWarehouse(ctx context.Context, userId uint64, warehouse *model.Warehouse) (uint64, error) {
-	// validate name
-	if warehouse.Name == "" {
-		return 0, model.ErrUWarehouseCreateWarehouse.New("name is required")
-	}
+func (u *warehouseUsecaseImpl) GetWarehouseProductStocksByShopUserIdAndProductId(ctx context.Context, shopUserId, productId uint64) ([]*model.WarehouseProductStock, error) {
+	return u.rWarehouse.GetWarehouseProductStocksByShopUserIdAndProductId(ctx, shopUserId, productId)
+}
 
-	// validate location
-	if warehouse.Location == "" {
-		return 0, model.ErrUWarehouseCreateWarehouse.New("location is required")
+func (u *warehouseUsecaseImpl) CreateWarehouse(ctx context.Context, warehouse *model.Warehouse) (uint64, error) {
+	warehouse.Status = model.WarehouseStatusActive
+	err := warehouse.Validate()
+	if err != nil {
+		return 0, model.ErrUWarehouseCreateWarehouse.New(err)
 	}
 
 	warehouse.Id = 0
-	warehouse.Status = model.WarehouseStatusActive
-	return u.rWarehouse.CreateWarehouse(ctx, userId, warehouse)
+	warehouse.CreatedAt = nil
+	return u.rWarehouse.CreateWarehouse(ctx, warehouse)
 }
 
-func (u *warehouseUsecaseImpl) CreateWarehouseInboundTransaction(ctx context.Context, userId, id, productId uint64, quantity int) error {
-	return u.rWarehouse.CreateWarehouseInboundTransaction(ctx, userId, id, productId, quantity)
+func (u *warehouseUsecaseImpl) UpdateWarehouse(ctx context.Context, warehouse *model.Warehouse) error {
+	err := warehouse.Validate()
+	if err != nil {
+		return model.ErrUWarehouseUpdateWarehouse.New(err)
+	}
+
+	warehouse.CreatedAt = nil
+	return u.rWarehouse.UpdateWarehouse(ctx, warehouse)
+}
+
+func (u *warehouseUsecaseImpl) AddWarehouseProductStock(ctx context.Context, shopUserId, id, productId uint64, quantity int) error {
+	return u.rWarehouse.AddWarehouseProductStock(ctx, shopUserId, id, productId, quantity)
+}
+
+func (u *warehouseUsecaseImpl) TransferWarehouseProductStock(ctx context.Context, shopUserId, fromId, toId, productId uint64, quantity int) (*model.WarehouseProductTransfer, error) {
+	return u.rWarehouse.TransferWarehouseProductStock(ctx, shopUserId, fromId, toId, productId, quantity)
 }

@@ -27,14 +27,14 @@ func (r *userResourceHTTPClientImpl) GetUserById(ctx context.Context, id uint64)
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, model.ErrRUserHTTPClientGetUserById.New(fmt.Errorf("unexpected status code: %d", resp.StatusCode))
-	}
-
 	var user model.User
 	err = httputil.DecodeUnmarshalResponseBody(resp.Body, &user)
 	if err != nil {
 		return nil, model.ErrRUserHTTPClientGetUserById.New(err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, model.ErrRUserHTTPClientGetUserById.New(fmt.Errorf("unexpected status code: %d", resp.StatusCode))
 	}
 
 	return &user, nil
@@ -46,4 +46,8 @@ func (r *userResourceHTTPClientImpl) GetUserByLogin(ctx context.Context, login, 
 
 func (r *userResourceHTTPClientImpl) CreateUser(ctx context.Context, user *model.User) (uint64, error) {
 	return 0, model.ErrRUserHTTPClientCreateUser.New(model.ErrCommonNotImplemented)
+}
+
+func (r *userResourceHTTPClientImpl) DeleteUser(ctx context.Context, id uint64) error {
+	return model.ErrRUserHTTPClientDeleteUser.New(model.ErrCommonNotImplemented)
 }

@@ -5,42 +5,22 @@ import (
 	"github.com/bearaujus/go-warehouse-api/internal/model"
 )
 
-func (r *productResourcePostgresImpl) GetProductsWithStockByUser(ctx context.Context, userId uint64) ([]*model.ProductWithStock, error) {
+func (r *productResourcePostgresImpl) GetProductsByShopUserIdAndWarehouseStatus(ctx context.Context, shopUserId uint64, warehouseStatus model.WarehouseStatus) ([]*model.Product, error) {
 	var products []*model.Product
-	var productsWithStock []*model.ProductWithStock
-	err := r.db.WithContext(ctx).Where("products.user_id = ?", userId).Preload("ProductStock.Warehouse").Find(&products).Error
+	q := r.db.WithContext(ctx)
+	if shopUserId != 0 {
+		q = q.Where("shop_user_id = ?", shopUserId)
+	}
+	if warehouseStatus != "" {
+		q = q.Preload("WarehouseProductStocks", "warehouse_id IN (SELECT id FROM warehouses WHERE status = ?)", warehouseStatus)
+	} else {
+		q = q.Preload("WarehouseProductStocks")
+	}
+	err := q.Find(&products).Error
 	if err != nil {
-		return nil, model.ErrRProductPostgresGetProductsWithStockByUser.New(err)
+		return nil, model.ErrRProductPostgresGetProductsByShopUserIdAndWarehouseStatus.New(err)
 	}
-
-	for _, product := range products {
-		productWithStock := &model.ProductWithStock{
-			Product: *product,
-		}
-
-		var totalStock, totalInactiveStock int
-		var activeProductStock []*model.ProductStock
-		var inactiveProductStock []*model.ProductStock
-
-		for _, stock := range product.ProductStock {
-			if stock.Warehouse.Status == model.WarehouseStatusActive {
-				activeProductStock = append(activeProductStock, stock)
-				totalStock += stock.Quantity
-			} else {
-				inactiveProductStock = append(inactiveProductStock, stock)
-				totalInactiveStock += stock.Quantity
-			}
-		}
-
-		productWithStock.ProductStock = activeProductStock
-		productWithStock.InactiveProductStock = inactiveProductStock
-		productWithStock.TotalStock = totalStock
-		productWithStock.TotalInactiveStock = totalInactiveStock
-
-		productsWithStock = append(productsWithStock, productWithStock)
-	}
-
-	return productsWithStock, nil
+	return products, nil
 }
 
 func (r *productResourcePostgresImpl) CreateProduct(ctx context.Context, product *model.Product) (uint64, error) {

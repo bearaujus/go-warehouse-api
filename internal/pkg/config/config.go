@@ -8,12 +8,14 @@ import (
 
 // Config holds the environment variables
 type Config struct {
-	ServiceOrderContainerName   string
-	ServiceOrderPort            string
-	ServiceOrderImageVersion    string
-	ServiceOrderHTTPCallAuthKey string
-	ServiceOrderHTTPCallAuthTTL time.Duration
-	ServiceOrderHTTPCallTimeout time.Duration
+	ServiceOrderContainerName              string
+	ServiceOrderPort                       string
+	ServiceOrderImageVersion               string
+	ServiceOrderHTTPCallAuthKey            string
+	ServiceOrderHTTPCallAuthTTL            time.Duration
+	ServiceOrderHTTPCallTimeout            time.Duration
+	ServiceOrderExpirationTTL              time.Duration
+	ServiceOrderStockReservationGCCronSpec string
 
 	ServiceProductContainerName   string
 	ServiceProductPort            string
@@ -99,12 +101,14 @@ type Config struct {
 
 func Read() *Config {
 	cfg := &Config{
-		ServiceOrderContainerName:   os.Getenv("SERVICE_ORDER_CONTAINER_NAME"),
-		ServiceOrderPort:            os.Getenv("SERVICE_ORDER_PORT"),
-		ServiceOrderImageVersion:    os.Getenv("SERVICE_ORDER_IMAGE_VERSION"),
-		ServiceOrderHTTPCallAuthKey: os.Getenv("SERVICE_ORDER_HTTP_CALL_AUTH_KEY"),
-		ServiceOrderHTTPCallAuthTTL: osGetenvToDuration("SERVICE_ORDER_HTTP_CALL_AUTH_TTL"),
-		ServiceOrderHTTPCallTimeout: osGetenvToDuration("SERVICE_ORDER_HTTP_CALL_TIMEOUT"),
+		ServiceOrderContainerName:              os.Getenv("SERVICE_ORDER_CONTAINER_NAME"),
+		ServiceOrderPort:                       os.Getenv("SERVICE_ORDER_PORT"),
+		ServiceOrderImageVersion:               os.Getenv("SERVICE_ORDER_IMAGE_VERSION"),
+		ServiceOrderHTTPCallAuthKey:            os.Getenv("SERVICE_ORDER_HTTP_CALL_AUTH_KEY"),
+		ServiceOrderHTTPCallAuthTTL:            osGetenvToDuration("SERVICE_ORDER_HTTP_CALL_AUTH_TTL"),
+		ServiceOrderHTTPCallTimeout:            osGetenvToDuration("SERVICE_ORDER_HTTP_CALL_TIMEOUT"),
+		ServiceOrderExpirationTTL:              osGetenvToDuration("SERVICE_ORDER_EXPIRATION_TTL"),
+		ServiceOrderStockReservationGCCronSpec: os.Getenv("SERVICE_ORDER_STOCK_RESERVATION_GC_CRON_SPEC"),
 
 		ServiceProductContainerName:   os.Getenv("SERVICE_PRODUCT_CONTAINER_NAME"),
 		ServiceProductPort:            os.Getenv("SERVICE_PRODUCT_PORT"),

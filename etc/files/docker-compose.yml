@@ -97,7 +97,7 @@ services:
   # --------------------------------------------------------------------------------------------------------------------
   postgres-master:
     container_name: "${POSTGRES_MASTER_CONTAINER_NAME}"
-    image: postgres:14-alpine
+    image: postgres:latest
     user: postgres
     ports:
       - "${POSTGRES_MASTER_PORT}:${POSTGRES_MASTER_PORT}"
@@ -132,7 +132,7 @@ services:
   # --------------------------------------------------------------------------------------------------------------------
   postgres-replica-1:
     container_name: "${POSTGRES_REPLICA_1_CONTAINER_NAME}"
-    image: postgres:14-alpine
+    image: postgres:latest
     user: postgres
     ports:
       - "${POSTGRES_REPLICA_1_PORT}:${POSTGRES_REPLICA_1_PORT}"
@@ -164,7 +164,7 @@ services:
 
   postgres-replica-2:
     container_name: "${POSTGRES_REPLICA_2_CONTAINER_NAME}"
-    image: postgres:14-alpine
+    image: postgres:latest
     user: postgres
     ports:
       - "${POSTGRES_REPLICA_2_PORT}:${POSTGRES_REPLICA_2_PORT}"
@@ -196,7 +196,7 @@ services:
 
   postgres-replica-3:
     container_name: "${POSTGRES_REPLICA_3_CONTAINER_NAME}"
-    image: postgres:14-alpine
+    image: postgres:latest
     user: postgres
     ports:
       - "${POSTGRES_REPLICA_3_PORT}:${POSTGRES_REPLICA_3_PORT}"
@@ -231,7 +231,7 @@ services:
   # --------------------------------------------------------------------------------------------------------------------
   redis:
     container_name: "${REDIS_CONTAINER_NAME}"
-    image: redis:alpine
+    image: redis:latest
     ports:
       - "${REDIS_PORT}:${REDIS_PORT}"
     volumes:

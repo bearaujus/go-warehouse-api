@@ -1,16 +1,36 @@
 package model
 
 import (
+	"fmt"
 	"gorm.io/plugin/optimisticlock"
-	"time"
 )
 
 type Shop struct {
-	Id          uint64                 `gorm:"primaryKey" json:"id,omitempty"`
-	UserId      uint64                 `gorm:"index" json:"user_id,omitempty"`
-	Name        string                 `gorm:"size:255;not null" json:"name,omitempty"`
+	UserId      uint64                 `json:"user_id,omitempty"`
+	Name        string                 `json:"name,omitempty"`
 	Description string                 `json:"description,omitempty"`
-	CreatedAt   *time.Time             `gorm:"autoCreateTime" json:"created_at,omitempty"`
-	Warehouses  []*Warehouse           `json:"warehouses,omitempty"`
 	Version     optimisticlock.Version `json:"-"`
+}
+
+func (m *Shop) Validate() error {
+	// validate user id
+	if m.UserId == 0 {
+		return fmt.Errorf("shop user id is required")
+	}
+
+	// validate name
+	if m.Name == "" {
+		return fmt.Errorf("shop name is required")
+	}
+
+	// validate description
+	if m.Description == "" {
+		return fmt.Errorf("shop description is required")
+	}
+
+	if len(m.Description) < 20 {
+		return fmt.Errorf("shop description must be at least 20 characters")
+	}
+
+	return nil
 }

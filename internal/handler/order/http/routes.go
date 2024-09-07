@@ -9,5 +9,7 @@ import (
 func (h *orderHandlerHTTPImpl) RegisterRoutes(s *server.Hertz, mAuth *auth.MiddlewareAuth, ms ...app.HandlerFunc) {
 	s.Use(ms...)
 
-	// TODO
+	s.GET("/buyer/orders", mAuth.AuthenticateUser(), mAuth.AuthorizeBuyer(), h.GetOrdersByUserIdAndStatus)
+	s.POST("/buyer/orders", mAuth.AuthenticateUser(), mAuth.AuthorizeBuyer(), h.CreateOrder)
+	s.POST("/buyer/orders/:id/complete", mAuth.AuthenticateUser(), mAuth.AuthorizeBuyer(), h.CompleteOrder)
 }

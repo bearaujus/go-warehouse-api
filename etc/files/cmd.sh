@@ -16,8 +16,14 @@ start() {
     # Check if the .env file exists in the same directory as the script
     if [ -f ".env" ]; then
         echo ".env file found."
+        echo "exporting envs..."
         # Load the environment variables from .env
-        export $(grep -v '^#' ".env" | xargs)
+        while IFS='=' read -r key value; do
+            # Ignore lines starting with '#' or empty lines
+            if [[ ! "$key" =~ ^# && "$key" != "" ]]; then
+                export "$key=$value"
+            fi
+        done < ".env"
     else
         echo ".env file not found. Exiting."
         exit 1

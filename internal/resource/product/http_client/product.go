@@ -5,8 +5,8 @@ import (
 	"github.com/bearaujus/go-warehouse-api/internal/model"
 )
 
-func (r *productResourceHTTPClientImpl) GetProductsWithStockByUser(ctx context.Context, userId uint64) ([]*model.ProductWithStock, error) {
-	return nil, model.ErrRProductHTTPClientGetProductsWithStockByUser.New(model.ErrCommonNotImplemented)
+func (r *productResourceHTTPClientImpl) GetProductsByShopUserIdAndWarehouseStatus(ctx context.Context, shopUserId uint64, status model.WarehouseStatus) ([]*model.Product, error) {
+	return nil, model.ErrRProductHTTPClientGetProductsByShopUserIdAndWarehouseStatus.New(model.ErrCommonNotImplemented)
 }
 
 func (r *productResourceHTTPClientImpl) CreateProduct(ctx context.Context, product *model.Product) (uint64, error) {

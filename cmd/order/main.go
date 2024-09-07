@@ -5,6 +5,7 @@ import (
 	. "github.com/bearaujus/go-warehouse-api/internal/middleware/auth"
 	"github.com/bearaujus/go-warehouse-api/internal/middleware/tracker"
 	"github.com/bearaujus/go-warehouse-api/internal/pkg"
+	"github.com/bearaujus/go-warehouse-api/internal/pkg/cronutil"
 	"github.com/bearaujus/go-warehouse-api/internal/pkg/httputil"
 	"github.com/bearaujus/go-warehouse-api/internal/pkg/postgres_cacher"
 	. "github.com/bearaujus/go-warehouse-api/internal/resource/order/postgres"
@@ -15,7 +16,7 @@ import (
 )
 
 func main() {
-	cfg, cancel := pkg.InitBaseApp()
+	ctx, cfg, cancel := pkg.InitBaseApp()
 	defer cancel()
 
 	log.Printf("Starting %v service...", cfg.ServiceOrderContainerName)
@@ -40,7 +41,7 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	rOrderPostgres := NewOrderResourcePostgres(postgres)
+	rOrderPostgres := NewOrderResourcePostgres(postgres, cfg.ServiceOrderExpirationTTL)
 	rUserHTTPClient := NewUserResourceHTTPClient(
 		pkg.GenerateHostPort(false, cfg.ServiceUserContainerName, cfg.ServiceUserPort),
 		cfg.ServiceOrderHTTPCallTimeout,
@@ -50,13 +51,19 @@ func main() {
 	)
 
 	uOrder := NewOrderUsecase(rOrderPostgres)
+	err = cronutil.AddJob(cfg.ServiceOrderStockReservationGCCronSpec, uOrder.CronJobExpiredOrder(ctx))
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer cronutil.StopFromBackground(ctx)
 
 	hOrderHTTP := NewOrderHandlerHTTP(uOrder)
 
 	mAuth := NewAuthMiddleware(rUserHTTPClient, cfg.ServiceUserAuthSecretKey, nil)
 
-	err = httputil.StartHTTPServer(cfg.ServiceOrderPort, func(s *server.Hertz) {
+	err = httputil.StartHTTPServer(ctx, cfg.ServiceOrderPort, func(s *server.Hertz) {
 		hOrderHTTP.RegisterRoutes(s, mAuth, tracker.MiddlewareTracker())
+		cronutil.RunInBackground()
 	})
 	if err != nil {
 		log.Fatalln(err)

@@ -9,8 +9,8 @@ import (
 func (h *userHandlerHTTPImpl) RegisterRoutes(s *server.Hertz, mAuth *auth.MiddlewareAuth, ms ...app.HandlerFunc) {
 	s.Use(ms...)
 
-	s.POST("/register", h.Register)
-	s.POST("/login", h.Login)
+	s.POST("/register", h.RegisterUser)
+	s.POST("/login", h.LoginUser)
 
 	s.GET("/internal/users/:id", mAuth.AuthenticateService(), h.GetUserById)
 }

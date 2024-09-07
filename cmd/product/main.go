@@ -15,7 +15,7 @@ import (
 )
 
 func main() {
-	cfg, cancel := pkg.InitBaseApp()
+	ctx, cfg, cancel := pkg.InitBaseApp()
 	defer cancel()
 
 	log.Printf("Starting %v service...", cfg.ServiceProductContainerName)
@@ -55,7 +55,7 @@ func main() {
 
 	mAuth := NewAuthMiddleware(rUserHTTPClient, cfg.ServiceUserAuthSecretKey, nil)
 
-	err = httputil.StartHTTPServer(cfg.ServiceProductPort, func(s *server.Hertz) {
+	err = httputil.StartHTTPServer(ctx, cfg.ServiceProductPort, func(s *server.Hertz) {
 		hProductHTTP.RegisterRoutes(s, mAuth, tracker.MiddlewareTracker())
 	})
 	if err != nil {

@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-func StartHTTPServer(port string, registerServerFunc func(s *server.Hertz)) error {
+func StartHTTPServer(ctx context.Context, port string, registerServerFunc func(s *server.Hertz)) error {
 	if registerServerFunc == nil {
 		return errors.New("nil register server function")
 	}
@@ -26,13 +26,10 @@ func StartHTTPServer(port string, registerServerFunc func(s *server.Hertz)) erro
 	registerServerFunc(s)
 	log.Print("HTTP server registered")
 
-	sCtx, sCtxCancel := context.WithCancel(context.Background())
-	defer sCtxCancel()
-
 	attachedStatusChan := make(chan struct{}, 1)
 	go func() {
-		pkg.WaitShutdownSigterm(sCtx, func() {
-			_ = s.Shutdown(sCtx)
+		pkg.WaitShutdownSigterm(ctx, func() {
+			_ = s.Shutdown(ctx)
 		}, attachedStatusChan)
 	}()
 	<-attachedStatusChan
@@ -97,9 +94,26 @@ func WriteErrorResponseAndAbort(rCtx *app.RequestContext, statusCode int, err er
 	rCtx.Abort()
 }
 
+func decodeResponseBody(r io.ReadCloser, resp *responseBody) error {
+	err := json.NewDecoder(r).Decode(resp)
+	if err != nil {
+		return err
+	}
+
+	if !resp.Header.IsSuccess {
+		return fmt.Errorf("[%v] %v. %v", resp.Header.Code, resp.Header.Reason, resp.Header.Stack)
+	}
+
+	return nil
+}
+
+func CheckResponseBodyError(r io.ReadCloser) error {
+	return decodeResponseBody(r, &responseBody{})
+}
+
 func DecodeUnmarshalResponseBody(r io.ReadCloser, v any) error {
 	resp := responseBody{}
-	err := json.NewDecoder(r).Decode(&resp)
+	err := decodeResponseBody(r, &resp)
 	if err != nil {
 		return err
 	}
