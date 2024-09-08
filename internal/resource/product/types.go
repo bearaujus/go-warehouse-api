@@ -6,6 +6,6 @@ import (
 )
 
 type ProductResource interface {
-	GetProductsWithStockByUser(ctx context.Context, userId uint64) ([]*model.ProductWithStock, error)
+	GetProductsByShopUserIdAndWarehouseStatus(ctx context.Context, shopUserId uint64, warehouseStatus model.WarehouseStatus) ([]*model.Product, error)
 	CreateProduct(ctx context.Context, product *model.Product) (uint64, error)
 }

@@ -11,30 +11,19 @@ import (
 	"net/http"
 )
 
-func (h *warehouseHandlerHTTPImpl) GetWarehouses(ctx context.Context, rCtx *app.RequestContext) {
+func (h *warehouseHandlerHTTPImpl) GetWarehousesByShopUserId(ctx context.Context, rCtx *app.RequestContext) {
 	userId, err := auth.GetUserIdFromContext(rCtx)
 	if err != nil {
-		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusUnauthorized, model.ErrHWarehouseHTTPGetWarehouses.New(model.ErrCommonInvalidAuthToken))
+		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusUnauthorized, model.ErrHWarehouseHTTPGetWarehousesByShopUserId.New(model.ErrCommonInvalidAuthToken))
 		return
 	}
 
-	shopId, _ := pkg.StringToUint64(rCtx.Query("shop_id"))
-	if shopId != 0 {
-		warehouses, err := h.uWarehouse.GetWarehousesByUserAndShop(ctx, userId, shopId)
-		if err != nil {
-			httputil.WriteErrorResponseAndAbort(rCtx, http.StatusBadRequest, err)
-			return
-		}
-
-		httputil.WriteResponse(rCtx, http.StatusOK, warehouses)
-		return
-	}
-
-	warehouses, err := h.uWarehouse.GetWarehousesByUser(ctx, userId)
+	warehouses, err := h.uWarehouse.GetWarehousesByShopUserId(ctx, userId)
 	if err != nil {
 		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusBadRequest, err)
 		return
 	}
+
 	httputil.WriteResponse(rCtx, http.StatusOK, warehouses)
 }
 
@@ -58,7 +47,8 @@ func (h *warehouseHandlerHTTPImpl) CreateWarehouse(ctx context.Context, rCtx *ap
 		return
 	}
 
-	id, err := h.uWarehouse.CreateWarehouse(ctx, userId, &warehouse)
+	warehouse.ShopUserId = userId
+	id, err := h.uWarehouse.CreateWarehouse(ctx, &warehouse)
 	if err != nil {
 		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusBadRequest, err)
 		return
@@ -67,37 +57,130 @@ func (h *warehouseHandlerHTTPImpl) CreateWarehouse(ctx context.Context, rCtx *ap
 	httputil.WriteResponse(rCtx, http.StatusCreated, &model.Warehouse{Id: id})
 }
 
-func (h *warehouseHandlerHTTPImpl) CreateWarehouseInboundTransaction(ctx context.Context, rCtx *app.RequestContext) {
+func (h *warehouseHandlerHTTPImpl) UpdateWarehouse(ctx context.Context, rCtx *app.RequestContext) {
 	userId, err := auth.GetUserIdFromContext(rCtx)
 	if err != nil {
-		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusUnauthorized, model.ErrHWarehouseHTTPCreateWarehouseInboundTransaction.New(model.ErrCommonInvalidAuthToken))
-		return
-	}
-
-	warehouseId, err := pkg.StringToUint64(rCtx.Param("id"))
-	if err != nil {
-		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusBadRequest, model.ErrHWarehouseHTTPCreateWarehouseInboundTransaction.New(model.ErrCommonInvalidRequestURL))
+		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusUnauthorized, model.ErrHWarehouseHTTPUpdateWarehouse.New(model.ErrCommonInvalidAuthToken))
 		return
 	}
 
 	data, err := rCtx.Body()
 	if err != nil {
-		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusBadRequest, model.ErrHWarehouseHTTPCreateWarehouseInboundTransaction.New(model.ErrCommonInvalidRequestBody))
+		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusBadRequest, model.ErrHWarehouseHTTPUpdateWarehouse.New(model.ErrCommonInvalidRequestBody))
 		return
 	}
 
-	productStock := model.ProductStock{}
-	err = json.Unmarshal(data, &productStock)
+	id, err := pkg.StringToUint64(rCtx.Param("id"))
 	if err != nil {
-		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusBadRequest, model.ErrHWarehouseHTTPCreateWarehouseInboundTransaction.New(model.ErrCommonInvalidRequestBody))
+		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusBadRequest, model.ErrHWarehouseHTTPUpdateWarehouse.New(model.ErrCommonInvalidRequestURL))
 		return
 	}
 
-	err = h.uWarehouse.CreateWarehouseInboundTransaction(ctx, userId, warehouseId, productStock.ProductId, productStock.Quantity)
+	warehouse := model.Warehouse{}
+	err = json.Unmarshal(data, &warehouse)
+	if err != nil {
+		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusBadRequest, model.ErrHWarehouseHTTPUpdateWarehouse.New(model.ErrCommonInvalidRequestBody))
+		return
+	}
+
+	warehouse.Id = id
+	warehouse.ShopUserId = userId
+	err = h.uWarehouse.UpdateWarehouse(ctx, &warehouse)
 	if err != nil {
 		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusBadRequest, err)
 		return
 	}
 
-	httputil.WriteEmptyResponse(rCtx, http.StatusCreated)
+	httputil.WriteResponse(rCtx, http.StatusOK, warehouse)
+}
+
+func (h *warehouseHandlerHTTPImpl) AddWarehouseProductStock(ctx context.Context, rCtx *app.RequestContext) {
+	userId, err := auth.GetUserIdFromContext(rCtx)
+	if err != nil {
+		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusUnauthorized, model.ErrHWarehouseHTTPAddWarehouseProductStock.New(model.ErrCommonInvalidAuthToken))
+		return
+	}
+
+	id, err := pkg.StringToUint64(rCtx.Param("id"))
+	if err != nil {
+		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusBadRequest, model.ErrHWarehouseHTTPAddWarehouseProductStock.New(model.ErrCommonInvalidRequestURL))
+		return
+	}
+
+	productId, err := pkg.StringToUint64(rCtx.Param("product_id"))
+	if err != nil {
+		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusBadRequest, model.ErrHWarehouseHTTPAddWarehouseProductStock.New(model.ErrCommonInvalidRequestURL))
+		return
+	}
+
+	data, err := rCtx.Body()
+	if err != nil {
+		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusBadRequest, model.ErrHWarehouseHTTPAddWarehouseProductStock.New(model.ErrCommonInvalidRequestBody))
+		return
+	}
+
+	type addWarehouseProductStockReq struct {
+		Quantity int `json:"quantity"`
+	}
+
+	addWarehouseProductStock := addWarehouseProductStockReq{}
+	err = json.Unmarshal(data, &addWarehouseProductStock)
+	if err != nil {
+		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusBadRequest, model.ErrHWarehouseHTTPAddWarehouseProductStock.New(model.ErrCommonInvalidRequestBody))
+		return
+	}
+
+	err = h.uWarehouse.AddWarehouseProductStock(ctx, userId, id, productId, addWarehouseProductStock.Quantity)
+	if err != nil {
+		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusBadRequest, err)
+		return
+	}
+
+	httputil.WriteEmptyResponse(rCtx, http.StatusOK)
+}
+
+func (h *warehouseHandlerHTTPImpl) TransferWarehouseProductStock(ctx context.Context, rCtx *app.RequestContext) {
+	userId, err := auth.GetUserIdFromContext(rCtx)
+	if err != nil {
+		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusUnauthorized, model.ErrHWarehouseHTTPTransferWarehouseProductStock.New(model.ErrCommonInvalidAuthToken))
+		return
+	}
+
+	fromId, err := pkg.StringToUint64(rCtx.Param("id"))
+	if err != nil {
+		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusBadRequest, model.ErrHWarehouseHTTPTransferWarehouseProductStock.New(model.ErrCommonInvalidRequestURL))
+		return
+	}
+
+	productId, err := pkg.StringToUint64(rCtx.Param("product_id"))
+	if err != nil {
+		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusBadRequest, model.ErrHWarehouseHTTPTransferWarehouseProductStock.New(model.ErrCommonInvalidRequestURL))
+		return
+	}
+
+	data, err := rCtx.Body()
+	if err != nil {
+		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusBadRequest, model.ErrHWarehouseHTTPTransferWarehouseProductStock.New(model.ErrCommonInvalidRequestBody))
+		return
+	}
+
+	type transferWarehouseProductStockReq struct {
+		DestinationWarehouseId uint64 `json:"destination_warehouse_id"`
+		Quantity               int    `json:"quantity"`
+	}
+
+	transferWarehouseProductStock := transferWarehouseProductStockReq{}
+	err = json.Unmarshal(data, &transferWarehouseProductStock)
+	if err != nil {
+		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusBadRequest, model.ErrHWarehouseHTTPTransferWarehouseProductStock.New(model.ErrCommonInvalidRequestBody))
+		return
+	}
+
+	warehouseProductTransfer, err := h.uWarehouse.TransferWarehouseProductStock(ctx, userId, fromId, transferWarehouseProductStock.DestinationWarehouseId, productId, transferWarehouseProductStock.Quantity)
+	if err != nil {
+		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusBadRequest, err)
+		return
+	}
+
+	httputil.WriteResponse(rCtx, http.StatusOK, warehouseProductTransfer)
 }

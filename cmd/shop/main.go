@@ -15,7 +15,7 @@ import (
 )
 
 func main() {
-	cfg, cancel := pkg.InitBaseApp()
+	ctx, cfg, cancel := pkg.InitBaseApp()
 	defer cancel()
 
 	log.Printf("Starting %v service...", cfg.ServiceShopContainerName)
@@ -53,9 +53,11 @@ func main() {
 
 	hShopHTTP := NewShopHandlerHTTP(uShop)
 
-	mAuth := NewAuthMiddleware(rUserHTTPClient, cfg.ServiceUserAuthSecretKey, nil)
+	mAuth := NewAuthMiddleware(rUserHTTPClient, cfg.ServiceUserAuthSecretKey, map[string]string{
+		cfg.ServiceUserContainerName: cfg.ServiceUserHTTPCallAuthKey,
+	})
 
-	err = httputil.StartHTTPServer(cfg.ServiceShopPort, func(s *server.Hertz) {
+	err = httputil.StartHTTPServer(ctx, cfg.ServiceShopPort, func(s *server.Hertz) {
 		hShopHTTP.RegisterRoutes(s, mAuth, tracker.MiddlewareTracker())
 	})
 	if err != nil {

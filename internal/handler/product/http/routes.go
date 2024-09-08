@@ -9,6 +9,8 @@ import (
 func (h *productHandlerHTTPImpl) RegisterRoutes(s *server.Hertz, mAuth *auth.MiddlewareAuth, ms ...app.HandlerFunc) {
 	s.Use(ms...)
 
-	s.GET("/products", mAuth.AuthenticateUser(), mAuth.AuthorizeSeller(), h.GetProductsWithStock)
-	s.POST("/products", mAuth.AuthenticateUser(), mAuth.AuthorizeSeller(), h.CreateProduct)
+	s.GET("/seller/products", mAuth.AuthenticateUser(), mAuth.AuthorizeSeller(), h.GetSellerProductsByShopUserId)
+	s.POST("/seller/products", mAuth.AuthenticateUser(), mAuth.AuthorizeSeller(), h.CreateProduct)
+
+	s.GET("/buyer/products", mAuth.AuthenticateUser(), mAuth.AuthorizeBuyer(), h.GetBuyerProductsByShopUserId)
 }

@@ -2,6 +2,7 @@ package errwrap
 
 import (
 	"fmt"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"runtime"
 	"strings"
 )
@@ -21,6 +22,7 @@ func (e *errDefImpl) New(a ...any) ErrWrap {
 		rawErrStr: fmt.Sprintf(e.format, a...),
 		stack:     captureStackTrace(),
 	}
+	hlog.Error(errWrap.Error())
 	return errWrap
 }
 

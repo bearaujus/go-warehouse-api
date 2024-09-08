@@ -7,8 +7,10 @@ import (
 )
 
 type OrderUsecase interface {
-	GetOrdersByUser(ctx context.Context, userId uint64) ([]*model.Order, error)
-	CreateOrder(ctx context.Context, order *model.Order) (uint64, error)
+	GetOrdersByUserIdAndStatus(ctx context.Context, userId uint64, status model.OrderStatus) ([]*model.Order, error)
+	CreateOrder(ctx context.Context, userId uint64, orderItems []*model.OrderItem) (*model.Order, error)
+	CompleteOrder(ctx context.Context, userId uint64, id uint64) (*model.Order, error)
+	CronJobExpiredOrder(ctx context.Context) func()
 }
 
 type orderUsecaseImpl struct {

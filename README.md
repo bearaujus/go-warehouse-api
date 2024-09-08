@@ -1,16 +1,42 @@
 # GO-WAREHOUSE-API
+**GO-WAREHOUSE-API** is a project built to meet the challenge of the Senior Back End Engineer Take Home Test. This repository implements a simplified warehouse management system using Go, designed to demonstrate key back-end engineering skills, including handling real-world scenarios such as stock tracking, inventory management, and building APIs.
 
-Welcome to **GO-WAREHOUSE-API**, a project designed to fulfill the `Senior Back End Engineer` challenge. This repository showcases a simplified warehouse system built with Go, demonstrating my ability to handle real-world warehouse management tasks, such as stock tracking, inventory management, and API design.
+### Key Features:
+1. **User Service:** Simple authentication system allowing users to log in using either phone or email.
+
+2. **Product Service:** API to list products, including stock availability, retrieving product information from the database.
+
+3. **Order Service:**
+
+   1. Checkout and Stock Deduction: Manages the checkout process, reserving product stock and ensuring stock isn’t oversold.
+   2. Stock Release: A mechanism to release reserved stock if payment is not completed within a specified time frame, implemented via a background job or timer.
+
+4. **Shop Service:** Each shop can manage one or more warehouses.
+
+5. **Warehouse Service:**
+
+   1. Stock Management: Manages stock quantities per warehouse.
+   2. Transfer Products: Allows stock transfers between warehouses, ensuring accurate updates to stock levels.
+   3. Active/Inactive Warehouses: Tracks warehouse statuses, excluding inactive warehouses from available stock counts.
+
+### Common Considerations:
+
+1. **Concurrency and Locking:** Implemented to ensure data consistency when multiple users access and modify stock simultaneously.
+2. **Monitoring and Logging:** Tracks system activities and logs errors for better system oversight.
+3. **Error Handling:** Robust error handling to gracefully manage failures.
+4. **Testing:** Includes comprehensive unit, integration, and end-to-end tests.
+5. **Scaling:** Designed with horizontal scaling in mind to handle increased traffic and data volumes.
+6. **Deployment and Containerization:** Uses containerization techniques (e.g., Docker) and can be managed using orchestration tools like Kubernetes.
 
 ## Architecture
 
 ### High-Level Design (HLD)
 
-To Be Added (TBA)
+<img src="./etc/docs/hld.png" width="500" alt="">
 
 ### Database Schema
 
-To Be Added (TBA)
+<img src="./etc/docs/schema.png" height="500" alt="">
 
 ## Running the Service
 
@@ -40,10 +66,9 @@ Feel free to adjust the environment variables to suit your needs. You can modify
 nano etc/files/.env
 ```
 
-### 5. (Optional) Install Makefile (if not installed)
+### 5. (Optional) Install Makefile
 If you haven’t installed [Make](https://www.gnu.org/software/make/manual/make.html) yet, you can install it using the following commands:
 ```bash
-# Update package list and install make
 sudo apt update
 sudo apt install make
 ```

@@ -24,17 +24,22 @@ import (
 	"time"
 )
 
-func InitBaseApp() (*config.Config, func()) {
+func InitBaseApp() (context.Context, *config.Config, func()) {
+	ctx, cancel := context.WithCancel(context.Background())
+
 	logPath := flag.String("log", "", "path to the log file")
 	flag.Parse()
 
-	cancel, err := initLogStd(*logPath)
+	closer, err := initLogStd(*logPath)
 	if err != nil {
 		log.Printf("failed to initialize log: %v", err)
 		os.Exit(1)
 	}
 
-	return config.Read(), cancel
+	return ctx, config.Read(), func() {
+		closer()
+		cancel()
+	}
 }
 
 func initLogStd(name string) (func(), error) {

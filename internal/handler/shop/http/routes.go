@@ -9,6 +9,5 @@ import (
 func (h *shopHandlerHTTPImpl) RegisterRoutes(s *server.Hertz, mAuth *auth.MiddlewareAuth, ms ...app.HandlerFunc) {
 	s.Use(ms...)
 
-	s.GET("/shops", mAuth.AuthenticateUser(), mAuth.AuthorizeSeller(), h.GetShops)
-	s.POST("/shops", mAuth.AuthenticateUser(), mAuth.AuthorizeSeller(), h.CreateShop)
+	s.POST("/internal/shops", mAuth.AuthenticateService(), h.CreateShop)
 }

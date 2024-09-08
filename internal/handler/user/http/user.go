@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/bearaujus/go-warehouse-api/internal/model"
 	"github.com/bearaujus/go-warehouse-api/internal/pkg"
 	"github.com/bearaujus/go-warehouse-api/internal/pkg/httputil"
@@ -26,30 +27,73 @@ func (h *userHandlerHTTPImpl) GetUserById(ctx context.Context, rCtx *app.Request
 	httputil.WriteResponse(rCtx, http.StatusOK, user)
 }
 
-func (h *userHandlerHTTPImpl) Register(ctx context.Context, rCtx *app.RequestContext) {
-	userEmail, _ := rCtx.GetPostForm("email")
-	userPhone, _ := rCtx.GetPostForm("phone")
-	userRawRole, _ := rCtx.GetPostForm("role")
-	userRawPassword, _ := rCtx.GetPostForm("password")
+func (h *userHandlerHTTPImpl) RegisterUser(ctx context.Context, rCtx *app.RequestContext) {
+	data, err := rCtx.Body()
+	if err != nil {
+		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusBadRequest, model.ErrHUserHTTPRegisterUser.New(model.ErrCommonInvalidRequestBody))
+		return
+	}
 
-	userId, err := h.uUser.Register(ctx, userEmail, userPhone, userRawRole, userRawPassword)
+	type registerUserReq struct {
+		Email       string `json:"email"`
+		Phone       string `json:"phone"`
+		PasswordRaw string `json:"password"`
+		ShopName    string `json:"shop_name"`
+		ShopDesc    string `json:"shop_desc"`
+	}
+
+	registerUser := registerUserReq{}
+	err = json.Unmarshal(data, &registerUser)
+	if err != nil {
+		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusBadRequest, model.ErrHUserHTTPRegisterUser.New(model.ErrCommonInvalidRequestBody))
+		return
+	}
+
+	user := model.User{
+		Email: registerUser.Email,
+		Phone: registerUser.Phone,
+	}
+
+	_, err = h.uUser.Register(ctx, &user, registerUser.PasswordRaw, &model.Shop{
+		Name:        registerUser.ShopName,
+		Description: registerUser.ShopDesc,
+	})
 	if err != nil {
 		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusBadRequest, err)
 		return
 	}
 
-	httputil.WriteResponse(rCtx, http.StatusCreated, &model.User{Id: userId})
+	user.PasswordHash = ""
+	httputil.WriteResponse(rCtx, http.StatusCreated, user)
 }
 
-func (h *userHandlerHTTPImpl) Login(ctx context.Context, rCtx *app.RequestContext) {
-	userLogin, _ := rCtx.GetPostForm("login")
-	userRawPassword, _ := rCtx.GetPostForm("password")
+func (h *userHandlerHTTPImpl) LoginUser(ctx context.Context, rCtx *app.RequestContext) {
+	data, err := rCtx.Body()
+	if err != nil {
+		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusBadRequest, model.ErrHUserHTTPLoginUser.New(model.ErrCommonInvalidRequestBody))
+		return
+	}
 
-	userAuthToken, err := h.uUser.Login(ctx, userLogin, userRawPassword)
+	type loginUserReq struct {
+		Login       string `json:"login"`
+		PasswordRaw string `json:"password"`
+	}
+
+	loginUser := loginUserReq{}
+	err = json.Unmarshal(data, &loginUser)
+	if err != nil {
+		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusBadRequest, model.ErrHUserHTTPLoginUser.New(model.ErrCommonInvalidRequestBody))
+		return
+	}
+
+	userAuthToken, userRole, err := h.uUser.Login(ctx, loginUser.Login, loginUser.PasswordRaw)
 	if err != nil {
 		httputil.WriteErrorResponseAndAbort(rCtx, http.StatusBadRequest, err)
 		return
 	}
 
-	httputil.WriteResponse(rCtx, http.StatusOK, utils.H{"token": userAuthToken})
+	httputil.WriteResponse(rCtx, http.StatusOK, utils.H{
+		"token": userAuthToken,
+		"role":  userRole,
+	})
 }

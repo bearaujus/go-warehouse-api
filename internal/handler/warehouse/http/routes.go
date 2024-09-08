@@ -9,7 +9,9 @@ import (
 func (h *warehouseHandlerHTTPImpl) RegisterRoutes(s *server.Hertz, mAuth *auth.MiddlewareAuth, ms ...app.HandlerFunc) {
 	s.Use(ms...)
 
-	s.GET("/warehouses", mAuth.AuthenticateUser(), mAuth.AuthorizeSeller(), h.GetWarehouses)
-	s.POST("/warehouses", mAuth.AuthenticateUser(), mAuth.AuthorizeSeller(), h.CreateWarehouse)
-	s.POST("/warehouses/:id/inbound", mAuth.AuthenticateUser(), mAuth.AuthorizeSeller(), h.CreateWarehouseInboundTransaction)
+	s.GET("/seller/warehouses", mAuth.AuthenticateUser(), mAuth.AuthorizeSeller(), h.GetWarehousesByShopUserId)
+	s.POST("/seller/warehouses", mAuth.AuthenticateUser(), mAuth.AuthorizeSeller(), h.CreateWarehouse)
+	s.PUT("/seller/warehouses/:id", mAuth.AuthenticateUser(), mAuth.AuthorizeSeller(), h.UpdateWarehouse)
+	s.POST("/seller/warehouses/:id/product-stocks/:product_id/add-stock", mAuth.AuthenticateUser(), mAuth.AuthorizeSeller(), h.AddWarehouseProductStock)
+	s.POST("/seller/warehouses/:id/product-stocks/:product_id/transfer", mAuth.AuthenticateUser(), mAuth.AuthorizeSeller(), h.TransferWarehouseProductStock)
 }

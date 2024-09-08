@@ -59,7 +59,7 @@ build-bin:
 
 .PHONY: build-container
 build-container:
-	docker rmi $(SERVICE_ORDER_CONTAINER_NAME) --no-prune || true
+	docker rmi $(CONTAINER_IMAGE_USERNAME)/$(SERVICE_ORDER_CONTAINER_NAME) --no-prune || true
 	docker build \
 		-f $(BUILD_DOCKER_FILE_NAME) \
 		-t $(SERVICE_ORDER_IMAGE_TAG) \
@@ -69,7 +69,7 @@ build-container:
 		--build-arg INIT_SCRIPT_PATH_SRC=$(BUILD_SERVICE_ENTRYPOINT_SCRIPT_NAME) \
 		.
 
-	docker rmi $(SERVICE_PRODUCT_CONTAINER_NAME) --no-prune || true
+	docker rmi $(CONTAINER_IMAGE_USERNAME)/$(SERVICE_PRODUCT_CONTAINER_NAME) --no-prune || true
 	docker build \
 		-f $(BUILD_DOCKER_FILE_NAME) \
 		-t $(SERVICE_PRODUCT_IMAGE_TAG) \
@@ -79,7 +79,7 @@ build-container:
 		--build-arg INIT_SCRIPT_PATH_SRC=$(BUILD_SERVICE_ENTRYPOINT_SCRIPT_NAME) \
 		.
 
-	docker rmi $(SERVICE_SHOP_CONTAINER_NAME) --no-prune || true
+	docker rmi $(CONTAINER_IMAGE_USERNAME)/$(SERVICE_SHOP_CONTAINER_NAME) --no-prune || true
 	docker build \
 		-f $(BUILD_DOCKER_FILE_NAME) \
 		-t $(SERVICE_SHOP_IMAGE_TAG) \
@@ -89,7 +89,7 @@ build-container:
 		--build-arg INIT_SCRIPT_PATH_SRC=$(BUILD_SERVICE_ENTRYPOINT_SCRIPT_NAME) \
 		.
 
-	docker rmi $(SERVICE_USER_CONTAINER_NAME) --no-prune || true
+	docker rmi $(CONTAINER_IMAGE_USERNAME)/$(SERVICE_USER_CONTAINER_NAME) --no-prune || true
 	docker build \
 		-f $(BUILD_DOCKER_FILE_NAME) \
 		-t $(SERVICE_USER_IMAGE_TAG) \
@@ -99,7 +99,7 @@ build-container:
 		--build-arg INIT_SCRIPT_PATH_SRC=$(BUILD_SERVICE_ENTRYPOINT_SCRIPT_NAME) \
 		.
 
-	docker rmi $(SERVICE_WAREHOUSE_CONTAINER_NAME) --no-prune || true
+	docker rmi $(CONTAINER_IMAGE_USERNAME)/$(SERVICE_WAREHOUSE_CONTAINER_NAME) --no-prune || true
 	docker build \
 		-f $(BUILD_DOCKER_FILE_NAME) \
 		-t $(SERVICE_WAREHOUSE_IMAGE_TAG) \
