@@ -75,7 +75,11 @@ func (r *orderResourcePostgresImpl) CreateOrder(ctx context.Context, userId uint
 			Preload("Product").
 			Find(&wpss).Error
 		if err != nil {
-			return nil, model.ErrROrderPostgresCreateOrder.New(fmt.Printf("warehouse product stocks is not enough: %v", err))
+			return nil, model.ErrROrderPostgresCreateOrder.New(err)
+		}
+
+		if len(wpss) == 0 {
+			return nil, model.ErrROrderPostgresCreateOrder.New(fmt.Sprintf("product with id '%v' is not exist or the stock is not enough", orderItems[i].ProductId))
 		}
 
 		// 3. for loop from warehouse product stocks and reduce the stocks from it
@@ -165,7 +169,7 @@ func (r *orderResourcePostgresImpl) CompleteOrder(ctx context.Context, userId ui
 		Preload("OrderItems").
 		First(&order).Error
 	if err != nil {
-		return nil, model.ErrROrderPostgresCompleteOrder.New("order is not exist or already completed")
+		return nil, model.ErrROrderPostgresCompleteOrder.New("order does not exist, already completed, or expired")
 	}
 
 	// 2. delete order item reservations

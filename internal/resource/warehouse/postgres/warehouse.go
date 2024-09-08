@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/bearaujus/go-warehouse-api/internal/model"
 	"gorm.io/gorm"
+	"time"
 )
 
 func (r *warehouseResourcePostgresImpl) GetWarehousesByShopUserId(ctx context.Context, shopUserId uint64) ([]*model.Warehouse, error) {
@@ -166,11 +167,13 @@ func (r *warehouseResourcePostgresImpl) TransferWarehouseProductStock(ctx contex
 	}
 
 	// create warehouse transfer log
+	transferredAt := time.Now()
 	warehouseProductTransfer := model.WarehouseProductTransfer{
 		ProductId:       productId,
 		FromWarehouseId: fromId,
 		ToWarehouseId:   toId,
 		Quantity:        quantity,
+		TransferredAt:   &transferredAt,
 	}
 
 	err = tx.Create(&warehouseProductTransfer).Error

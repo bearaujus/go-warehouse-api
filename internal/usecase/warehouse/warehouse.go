@@ -40,9 +40,66 @@ func (u *warehouseUsecaseImpl) UpdateWarehouse(ctx context.Context, warehouse *m
 }
 
 func (u *warehouseUsecaseImpl) AddWarehouseProductStock(ctx context.Context, shopUserId, id, productId uint64, quantity int) error {
+	// validate shop user id
+	if shopUserId == 0 {
+		return model.ErrUWarehouseAddWarehouseProductStock.New("warehouse shop user id is required")
+	}
+
+	// validate warehouse id
+	if id == 0 {
+		return model.ErrUWarehouseAddWarehouseProductStock.New("warehouse id is required")
+	}
+
+	// validate product id
+	if productId == 0 {
+		return model.ErrUWarehouseAddWarehouseProductStock.New("product id is required")
+	}
+
+	// validate quantity
+	if quantity == 0 {
+		return model.ErrUWarehouseAddWarehouseProductStock.New("quantity id is required")
+	}
+
+	if quantity < 0 {
+		return model.ErrUWarehouseAddWarehouseProductStock.New("quantity is invalid")
+	}
+
 	return u.rWarehouse.AddWarehouseProductStock(ctx, shopUserId, id, productId, quantity)
 }
 
 func (u *warehouseUsecaseImpl) TransferWarehouseProductStock(ctx context.Context, shopUserId, fromId, toId, productId uint64, quantity int) (*model.WarehouseProductTransfer, error) {
+	// validate shop user id
+	if shopUserId == 0 {
+		return nil, model.ErrUWarehouseTransferWarehouseProductStock.New("warehouse shop user id is required")
+	}
+
+	// validate from id
+	if fromId == 0 {
+		return nil, model.ErrUWarehouseTransferWarehouseProductStock.New("source warehouse id is required")
+	}
+
+	// validate to id
+	if toId == 0 {
+		return nil, model.ErrUWarehouseTransferWarehouseProductStock.New("destination warehouse id is required")
+	}
+
+	// validate product id
+	if productId == 0 {
+		return nil, model.ErrUWarehouseTransferWarehouseProductStock.New("product id is required")
+	}
+
+	// validate quantity
+	if quantity == 0 {
+		return nil, model.ErrUWarehouseTransferWarehouseProductStock.New("quantity id is required")
+	}
+
+	if quantity < 0 {
+		return nil, model.ErrUWarehouseTransferWarehouseProductStock.New("quantity is invalid")
+	}
+
+	// validate source and destination id
+	if fromId == toId {
+		return nil, model.ErrUWarehouseTransferWarehouseProductStock.New("transfer between the same warehouse is not allowed")
+	}
 	return u.rWarehouse.TransferWarehouseProductStock(ctx, shopUserId, fromId, toId, productId, quantity)
 }

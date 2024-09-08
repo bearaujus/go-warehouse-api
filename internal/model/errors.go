@@ -104,8 +104,10 @@ var (
 // Warehouse Service
 
 var (
-	ErrUWarehouseCreateWarehouse = errwrap.NewErrDef("u.warehouse.001", "failed to create warehouse in usecase. %v")
-	ErrUWarehouseUpdateWarehouse = errwrap.NewErrDef("u.warehouse.002", "failed to update warehouse in usecase. %v")
+	ErrUWarehouseCreateWarehouse               = errwrap.NewErrDef("u.warehouse.001", "failed to create warehouse in usecase. %v")
+	ErrUWarehouseUpdateWarehouse               = errwrap.NewErrDef("u.warehouse.002", "failed to update warehouse in usecase. %v")
+	ErrUWarehouseAddWarehouseProductStock      = errwrap.NewErrDef("u.warehouse.003", "failed to add warehouse product stock in usecase. %v")
+	ErrUWarehouseTransferWarehouseProductStock = errwrap.NewErrDef("u.warehouse.004", "failed to transfer warehouse product stock in usecase. %v")
 )
 
 // ---------------------------------------------------------------------------------------------------------------------
