@@ -77,19 +77,37 @@ sudo apt install make
 Finally, you can run the application using `make` commands:
 
 - To start the application in the background:
-  ```bash
-  make up
-  ```
+
+```bash
+make up
+```
 
 - To stop the application:
-  ```bash
-  make down
-  ```
+
+```bash
+make down
+```
+
+### 7. Debugging
+After you started the service, you can see the log files at:
+```bash
+build/log/postgres-master.log
+build/log/postgres-replica-1.log
+build/log/postgres-replica-2.log
+build/log/postgres-replica-3.log
+build/log/redis.log
+build/log/service-order.log
+build/log/service-product.log
+build/log/service-shop.log
+build/log/service-user.log
+build/log/service-warehouse.log
+```
 
 ## Using the Service
 
 You can explore the API via Postman. Full API documentation is available here: [API Spec](https://documenter.getpostman.com/view/37777109/2sAXjNZWt5).
 
+<img width="315" alt="Screenshot 2024-09-08 at 09 49 48" src="https://github.com/user-attachments/assets/51e47a88-5549-434f-ad53-8712af19232f">
 
 ---
 
